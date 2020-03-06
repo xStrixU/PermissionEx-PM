@@ -35,6 +35,7 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§8".str_repeat('-',38)."(§2GENERAL§8)".str_repeat('-',39));
 		 $sender->sendMessage("§7/pex info §8- §7shows plugin informations");
 		 $sender->sendMessage("§7/pex help §8- §7shows a list of commands");
+		 $sender->sendMessage("§7/pex reload §8- §7reloads plugin");
 		 $sender->sendMessage("§8".str_repeat('-',41)."(§2USER§8)".str_repeat('-',41));
 		 $sender->sendMessage("§7/pex user §8- §7shows a list of registered users");
 		 $sender->sendMessage("§7/pex user (nick) §8- §7shows a list of player groups");
@@ -76,6 +77,15 @@ class PexCommand extends Command {
 			 $sender->sendMessage("§7Contact me:");
 			 $sender->sendMessage("§7YouTube: §2xStrixU");
 			 $sender->sendMessage("§7Discord: §2xStrixU#4844");
+			break;
+			
+			case "reload":
+			 if(!$sender->hasPermission("pex.command.reload")) {
+			  $sender->sendMessage(Main::getPermissionMessage());
+			 	return;
+		 	}
+		 	Main::getInstance()->getGroupManager()->reload();
+		 	$sender->sendMessage(Main::format("Plugin has been reloaded"));
 			break;
 			
 			case "set":

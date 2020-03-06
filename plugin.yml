@@ -12,12 +12,12 @@ permissions:
      pex.command.general:
        default: op
        description: Allow to use general pex commands
+       pex.command.reset:
+       default: op
+       description: Allow to reset plugin
      pex.command.set:
        default: op
        description: Allow to use set pex commands
      pex.command.users:
        default: op
        description: Allow to use general users commands
-     pex.command.general:
-       default: op
-       description: Allow to use general groups commands

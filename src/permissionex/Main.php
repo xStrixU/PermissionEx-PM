@@ -56,6 +56,10 @@ class Main extends PluginBase {
 		return $this->groupManager;
 	}
 	
+	public function getSettings() : Config {
+		return $this->settings;
+	}
+	
 	public function getProvider() : Provider {
 		return $this->provider;
 	}
@@ -103,5 +107,11 @@ class Main extends PluginBase {
 		
 		foreach($listeners as $listener)
 		 $this->getServer()->getPluginManager()->registerEvents($listener, $this);
+	}
+	
+	public function reload() : void {
+		$this->settings = $settings = new Config($this->getDataFolder(). 'settings.yml', Config::YAML);
+		
+		$this->groupManager->reload();
 	}
 }

@@ -12,6 +12,7 @@ use pocketmine\command\{
 };
 use permissionex\Main;
 use permissionex\group\GroupManager;
+use permissionex\chat\ChatManager;
 
 class PexCommand extends Command {
 
@@ -36,6 +37,8 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§7/pex info §8- §7shows plugin informations");
 		 $sender->sendMessage("§7/pex help §8- §7shows a list of commands");
 		 $sender->sendMessage("§7/pex reload §8- §7reloads plugin");
+		 $sender->sendMessage("§7/pex set default group (group) §8- §7sets default group");
+		 $sender->sendMessage("§7/pex set chat pw (true/false) §8- §7sets chat per world status");
 		 $sender->sendMessage("§8".str_repeat('-',41)."(§2USER§8)".str_repeat('-',41));
 		 $sender->sendMessage("§7/pex user §8- §7shows a list of registered users");
 		 $sender->sendMessage("§7/pex user (nick) §8- §7shows a list of player groups");
@@ -84,7 +87,7 @@ class PexCommand extends Command {
 			  $sender->sendMessage(Main::getPermissionMessage());
 			 	return;
 		 	}
-		 	Main::getInstance()->getGroupManager()->reload();
+		 	Main::getInstance()->reload();
 		 	$sender->sendMessage(Main::format("Plugin has been reloaded"));
 			break;
 			
@@ -99,6 +102,31 @@ class PexCommand extends Command {
 		 		return;
 		 	}
 			 switch($args[1]) {
+			 	case "chat":
+			 	 if(!isset($args[2])) {
+			 	 	$sender->sendMessage(Main::getErrorMessage());
+			 	 	return;
+			 	 }
+			 	 
+			 	 switch($args[2]) {
+			 	 	case "pw":
+			 	 	 if(!isset($args[3]) || (isset($args[3]) && !in_array($args[3], ["true", "false"]))) {
+			 	 	 	$sender->sendMessage(Main::format("Usage: /pex set chat pw (true/false)"));
+			 	 	 	return;
+			 	 	 }
+			 	 	 
+			 	 	 if($args[3] == "false") {
+			 	 	 	ChatManager::setChatPerWorld(false);
+			 	 	 	$sender->sendMessage(Main::format("Chat per world has been unsetted"));
+			 	 	 } elseif($args[3] == "true") {
+			 	 	 	ChatManager::setChatPerWorld();
+			 	 	 	$sender->sendMessage(Main::format("Chat per world has been setted"));
+			 	 	 }
+			 	 	break;
+			 	 	default:
+			 	 	 $sender->sendMessage(Main::getErrorMessage());
+			 	 }
+			 	break;
 			 	case "default":
 			 	 switch($args[2]) {
 			 	 	case "group":

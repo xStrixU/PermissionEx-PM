@@ -15,7 +15,17 @@ class ChatListener implements Listener {
 		$player = $e->getPlayer();
 	 $groupManager = Main::getInstance()->getGroupManager();
 	 
-	 if($groupManager->getPlayer($player->getName())->getGroup()->getFormat() != null)
-	  $e->setFormat(ChatManager::getFormat($player, $e->getMessage()));
+	 if($groupManager->getPlayer($player->getName())->getGroup()->getFormat() != null) {
+	 	$format = ChatManager::getFormat($player, $e->getMessage());
+	 	
+	 	if(!ChatManager::isChatPerWorld())
+	   $e->setFormat($format);
+	  else {
+	  	$e->setCancelled(true);
+	  	
+	  	foreach($player->getLevel()->getPlayers() as $p)
+	  	 $p->sendMessage($format);
+	  }
+	 }
 	}
 }

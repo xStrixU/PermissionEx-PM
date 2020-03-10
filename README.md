@@ -10,6 +10,7 @@ Command | Permission | Description
 /pex info | `pex.command.general` | Shows plugin information
 /pex reload | `pex.command.reload` | Reloads plugin
 /pex set default group (group) | `pex.command.set` | Sets default group
+/pex set chat pw (true/false) | `pex.command.set` | Sets chat per world status
 
 ## User commands
 Command | Permission | Description

@@ -10,8 +10,8 @@ use permissionex\group\Group;
 interface Provider {
 	
 	public function getPlayerGroups(IPlayer $player) : array;
-	public function addPlayerGroup(IPlayer $player, Group $group, ?string $expiryDate = null) : void;
-	public function setPlayerGroup(IPlayer $player, Group $group) : void;
+	public function addPlayerGroup(IPlayer $player, Group $group, ?string $expiryDate = null, ?string $levelName = null) : void;
+	public function setPlayerGroup(IPlayer $player, Group $group, ?string $levelName = null) : void;
 	public function removePlayerGroup(IPlayer $player, Group $group) : void;
  public function removePlayerGroups(IPlayer $player) : void;
  public function hasPlayerGroup(IPlayer $player, ?Group $group = null) : bool;

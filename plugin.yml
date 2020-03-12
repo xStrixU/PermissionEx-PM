@@ -5,7 +5,7 @@ version: 1.0
 api: 3.0.0
 
 permissions:
- pex.comand:
+ pex.command:
    default: op
    description: Allow to use all pex commands
    children:
@@ -20,4 +20,7 @@ permissions:
        description: Allow to use set pex commands
      pex.command.users:
        default: op
-       description: Allow to use general users commands
+       description: Allow to use users commands
+     pex.command.groups:
+       default: op
+       description: Allow to use groups commands

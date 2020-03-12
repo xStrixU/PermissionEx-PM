@@ -24,6 +24,24 @@ class Group {
 		return $this->name;
 	}
 	
+	public function getDisplayName() : ?string {
+		if(!isset($this->data['displayname']))
+		 return null;
+		
+		return $this->data['displayname'];
+	}
+	
+	public function setDisplayName(?string $displayName = null) : void {
+		$data = $this->data;
+		
+		if($displayName == null)
+		 unset($data['displayname']);
+		else
+	 	$data['displayname'] = $displayName;
+	 
+		$this->setData($data);
+	}
+	
 	public function getProvider() : Provider {
 		return $this->provider;
 	}

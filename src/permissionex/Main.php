@@ -11,7 +11,7 @@ use permissionex\provider\{
 	Provider, SQLite3Provider
 };
 use permissionex\listeners\{
-	JoinListener, QuitListener, ChatListener
+	JoinListener, QuitListener, ChatListener, LevelChangeListener
 };
 use permissionex\commands\{
 	PexCommand
@@ -102,7 +102,8 @@ class Main extends PluginBase {
 	 $listeners = [
 		 new JoinListener(),
 		 new QuitListener(),
-		 new ChatListener()
+		 new ChatListener(),
+		 new LevelChangeListener()
 		];
 		
 		foreach($listeners as $listener)

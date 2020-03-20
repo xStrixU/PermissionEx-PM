@@ -60,6 +60,7 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§7/pex group (group) format remove §8- §7removes group chat format");
 		 $sender->sendMessage("§7/pex group (group) rank (rank) §8- §7sets group rank in hierarchy");
 		 $sender->sendMessage("§7/pex group (group) displayname §8- §7group displayname settings");
+		 $sender->sendMessage("§7/pex group (group) nametag §8- §7group nametag settings");
 		 $sender->sendMessage("§7/pex group (group) create {parents} §8- §7creates a group");
 		 $sender->sendMessage("§7/pex group (group) delete §8- §7deletes a group");
 		 $sender->sendMessage("§7/pex group add (permission) §8- §7adds permission to the group");
@@ -190,6 +191,42 @@ class PexCommand extends Command {
 			 }
 			 
 			 switch($args[2]) {
+			 	case "nametag":
+			 	 if(!$groupManager->isGroupExists($args[1])) {
+		  	 	$sender->sendMessage(Main::format("This group does not exists!"));
+			   	return;
+		  	 }
+		  	 
+		  	 $group = $groupManager->getGroup($args[1]);
+		  	 
+		  	 if(!isset($args[3])) {
+		  	 	$nametag = $group->getNametag();
+		  	 	
+		  	 	$sender->sendMessage(Main::format($nametag == null ? "This group has no nametag!" : "Group §2{$args[1]} §7nametag: §2{$nametag}"));
+		  	 	return;
+		  	 }
+		  	 
+		  	 switch($args[3]) {
+		  	 	case "set":
+		  	 	 if(!isset($args[4])) {
+		  	 	 	$sender->sendMessage(Main::format("Usage: /pex group $args[1] nametag set (nametag format)"));
+		  	 	 	return;
+		  	 	 }
+		  	 	 
+		  	 	 $group->setNametag($args[4]);	 
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7nametag has been set to §2{$args[4]}"));
+		  	 	break;
+		  	 	
+		  	 	case "remove":
+		  	 	 $group->setNametag();
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7nametag has been removed"));
+		  	 	break;
+		  	 	
+		  	 	default:
+		  	 	 $sender->sendMessage(Main::getErrorMessage());
+		  	 }
+			 	break;
+			 	
 			 	case "displayname":
 			 	 if(!$groupManager->isGroupExists($args[1])) {
 		  	 	$sender->sendMessage(Main::format("This group does not exists!"));

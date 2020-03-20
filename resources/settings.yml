@@ -2,7 +2,6 @@
 provider: sqlite3
 
 # MYSQL
-
 mysql_host: host
 mysql_user: user
 mysql_password: password

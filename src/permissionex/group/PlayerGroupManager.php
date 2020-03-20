@@ -10,6 +10,7 @@ use pocketmine\{
 use pocketmine\permission\PermissionAttachment;
 use permissionex\Main;
 use permissionex\provider\Provider;
+use permissionex\events\PlayerUpdateGroupEvent;
 
 class PlayerGroupManager {
 	
@@ -40,7 +41,7 @@ class PlayerGroupManager {
 	}
 	
 	public function addGroup(Group $group, ?int $time = null, ?string $levelName = null) : void {
-		if($this->hasGroup($group))
+		if($this->hasGroup($group, false))
 		 $this->removeGroup($group, false);
 		if($time != null) {
 			$date = date('d.m.Y H:i:s', strtotime(date("H:i:s")) + $time);
@@ -49,6 +50,9 @@ class PlayerGroupManager {
 			$this->provider->addPlayerGroup($this->player, $group, null, $levelName);
 		
 		$this->updatePermissions();
+		
+		if($this->player instanceof Player)
+		 (new PlayerUpdateGroupEvent($this->player))->call();
 	}
 	
 	public function addDefaultGroup() : void {
@@ -75,8 +79,8 @@ class PlayerGroupManager {
  	$this->updatePermissions();
  }
  
- public function hasGroup(?Group $group = null) : bool {
-		return $this->provider->hasPlayerGroup($this->player, $group);
+ public function hasGroup(?Group $group = null, bool $checkLevel = true) : bool {
+		return $this->provider->hasPlayerGroup($this->player, $group, $checkLevel);
  }
  
  // RETURN FIRST GROUP IN HIERARCHY

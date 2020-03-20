@@ -42,6 +42,24 @@ class Group {
 		$this->setData($data);
 	}
 	
+	public function getNametag() : ?string {
+		if(!isset($this->data['nametag']))
+		 return null;
+		
+		return $this->data['nametag'];
+	}
+	
+	public function setNametag(?string $nametag = null) : void {
+		$data = $this->data;
+		
+		if($nametag == null)
+		 unset($data['nametag']);
+		else
+	 	$data['nametag'] = $nametag;
+	 
+		$this->setData($data);
+	}
+	
 	public function getProvider() : Provider {
 		return $this->provider;
 	}

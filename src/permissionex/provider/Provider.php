@@ -14,7 +14,7 @@ interface Provider {
 	public function setPlayerGroup(IPlayer $player, Group $group, ?string $levelName = null) : void;
 	public function removePlayerGroup(IPlayer $player, Group $group) : void;
  public function removePlayerGroups(IPlayer $player) : void;
- public function hasPlayerGroup(IPlayer $player, ?Group $group = null) : bool;
+ public function hasPlayerGroup(IPlayer $player, ?Group $group = null, bool $checkLevel = true) : bool;
  public function getPlayerGroupExpiryDate(IPlayer $player, Group $group) : ?string;
  public function addPlayerPermission(IPlayer $player, string $permission, ?string $expiryDate = null) : void;
  public function removePlayerPermission(IPlayer $player, string $permission) : void;

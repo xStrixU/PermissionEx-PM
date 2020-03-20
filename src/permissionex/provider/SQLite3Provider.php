@@ -65,22 +65,27 @@ class SQLite3Provider implements Provider {
    $this->db->query("DELETE FROM groups WHERE nick = '$nick'");
  }
  
- public function hasPlayerGroup(IPlayer $player, ?Group $group = null) : bool {
+ public function hasPlayerGroup(IPlayer $player, ?Group $group = null, bool $checkLevel = true) : bool {
  	$nick = strtolower($player->getName());
  	
   if($group == null)
    return !empty($this->db->query("SELECT * FROM groups WHERE nick = '$nick'")->fetchArray());
   
-  if($player instanceof Player) {
+  if($player instanceof Player && $checkLevel) {
   	$array = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray(SQLITE3_ASSOC);
-  	return $array['levelName'] != null && $player->getLevel()->getName() == $array['levelName'];
+  	
+  	return $array['levelName'] == null ? true : $player->getLevel()->getName() == $array['levelName'];
   }
+  $result = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'");
    
-   $result = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'");
+  if($checkLevel) {
    while($row = $result->fetchArray(SQLITE3_ASSOC))
     if($row['levelName'] == null)
      return true;
-  return false;
+   return false;
+  } else {
+  	return !empty($result->fetchArray());
+  }
  }
  
  public function getPlayerGroupExpiryDate(IPlayer $player, Group $group) : ?string {

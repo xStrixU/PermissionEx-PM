@@ -10,7 +10,7 @@ use pocketmine\{
 use pocketmine\permission\PermissionAttachment;
 use permissionex\Main;
 use permissionex\provider\Provider;
-use permissionex\events\PlayerUpdateGroupEvent;
+use permissionex\events\player\PlayerUpdateGroupEvent;
 
 class PlayerGroupManager {
 	

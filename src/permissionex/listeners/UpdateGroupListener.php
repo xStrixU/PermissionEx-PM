@@ -5,18 +5,13 @@ declare(strict_types=1);
 namespace permissionex\listeners;
 
 use pocketmine\event\Listener;
-use permissionex\events\PlayerUpdateGroupEvent;
+use permissionex\events\player\PlayerUpdateGroupEvent;
 use permissionex\Main;
-use permissionex\managers\FormatManager;
+use permissionex\managers\NameTagManager;
 
 class UpdateGroupListener implements Listener {
 	
 	public function updateNametag(PlayerUpdateGroupEvent $e) {
-		$player = $e->getPlayer();
-		
-		$group = Main::getInstance()->getGroupManager()->getPlayer($player->getName())->getGroup();
-		
-		if($group->getNametag() != null)
-		 $player->setDisplayName(FormatManager::getFormat($player, $group->getNametag()));
+		NameTagManager::updateNameTag($e->getPlayer());
 	}
 }

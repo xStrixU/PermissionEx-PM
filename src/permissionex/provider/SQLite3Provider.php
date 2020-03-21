@@ -74,18 +74,21 @@ class SQLite3Provider implements Provider {
   if($player instanceof Player && $checkLevel) {
   	$array = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray(SQLITE3_ASSOC);
   	
+  	if(empty($array))
+  	 return false;
+  	
   	return $array['levelName'] == null ? true : $player->getLevel()->getName() == $array['levelName'];
   }
-  $result = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'");
-   
-  if($checkLevel) {
-   while($row = $result->fetchArray(SQLITE3_ASSOC))
-    if($row['levelName'] == null)
-     return true;
+  
+  $array = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray(SQLITE3_ASSOC);
+  
+  if(empty($array))
    return false;
-  } else {
-  	return !empty($result->fetchArray());
-  }
+   
+  if($checkLevel)
+  	return $array['levelName'] == null ? true : false;
+  
+  return true;
  }
  
  public function getPlayerGroupExpiryDate(IPlayer $player, Group $group) : ?string {

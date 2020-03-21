@@ -7,6 +7,7 @@ namespace permissionex\listeners;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use permissionex\Main;
+use permissionex\managers\NameTagManager;
 
 class JoinListener implements Listener {
 	
@@ -22,5 +23,9 @@ class JoinListener implements Listener {
 	 	 }
 	  $groupManager->getPlayer($player->getName())->addDefaultGroup();
 	 }
+	}
+	
+	public function updateNametag(PlayerJoinEvent $e) {
+		NameTagManager::updateNameTag($e->getPlayer());
 	}
 }

@@ -7,6 +7,8 @@ namespace permissionex\group;
 use pocketmine\Server;
 use permissionex\Main;
 use permissionex\provider\Provider;
+use permissionex\events\group\GroupUpdateDataEvent;
+use permissionex\managers\NameTagManager;
 
 class Group {
 	
@@ -42,14 +44,14 @@ class Group {
 		$this->setData($data);
 	}
 	
-	public function getNametag() : ?string {
+	public function getNameTag() : ?string {
 		if(!isset($this->data['nametag']))
 		 return null;
 		
 		return $this->data['nametag'];
 	}
 	
-	public function setNametag(?string $nametag = null) : void {
+	public function setNameTag(?string $nametag = null) : void {
 		$data = $this->data;
 		
 		if($nametag == null)
@@ -58,6 +60,9 @@ class Group {
 	 	$data['nametag'] = $nametag;
 	 
 		$this->setData($data);
+		
+		foreach($this->getPlayers() as $nick)
+		 NameTagManager::updateNameTag(Server::getInstance()->getPlayerExact($nick));
 	}
 	
 	public function getProvider() : Provider {
@@ -80,6 +85,7 @@ class Group {
 		
 		$this->reload();
 		$this->updatePlayersPermissions();
+		(new GroupUpdateDataEvent($this))->call();
 	}
 	
 	public function getRank() : ?int {

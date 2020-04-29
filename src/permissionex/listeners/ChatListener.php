@@ -12,7 +12,13 @@ use permissionex\managers\{
 };
 
 class ChatListener implements Listener {
-	
+
+    /**
+     * @param PlayerChatEvent $e
+     *
+     * @priority MONITOR
+     * @ignoreCancelled true
+     */
 	public function chatFormat(PlayerChatEvent $e) {
 		$player = $e->getPlayer();
 	 $groupManager = Main::getInstance()->getGroupManager();

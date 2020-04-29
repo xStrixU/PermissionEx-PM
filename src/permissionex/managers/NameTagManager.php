@@ -10,14 +10,18 @@ use permissionex\Main;
 class NameTagManager {
 	
 	public static function updateNameTag(Player $player) : void {
-		$group = Main::getInstance()->getGroupManager()->getPlayer($player->getName())->getGroup();
-		
-		if($group == null)
-		 return;
-		
-		if($group->getNameTag() == null)
-		 $player->setNameTag($player->getName());
-		else
-		 $player->setNameTag(FormatManager::getFormat($player, $group->getNametag()));
+	    $nametag = self::getNameTag($player);
+
+	    if($nametag != null)
+	        $player->setNameTag(self::getNameTag($player));
 	}
+
+	public static function getNameTag(Player $player) : ?string {
+        $group = Main::getInstance()->getGroupManager()->getPlayer($player->getName())->getGroup();
+
+        if($group == null || $group->getNameTag() == null)
+            return null;
+
+        return FormatManager::getFormat($player, $group->getNametag());
+    }
 }

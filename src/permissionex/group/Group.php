@@ -122,10 +122,11 @@ class Group {
 	
 	public function getPermissions() : array {
 		$perms = $this->data['permissions'];
-		
+
 		foreach($this->data['parents'] as $groupName)
-		 $perms = array_merge($perms, Main::getInstance()->getGroupManager()->getGroup($groupName)->getPermissions());
-		 
+		    foreach(Main::getInstance()->getGroupManager()->getGroup($groupName)->getPermissions() as $perm)
+		        $perms[] = $perm;
+
 		 $permissions = [];
 		 
 		 foreach(array_unique($perms) as $permission) {

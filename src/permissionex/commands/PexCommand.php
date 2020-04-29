@@ -12,12 +12,13 @@ use pocketmine\command\{
 };
 use permissionex\Main;
 use permissionex\group\GroupManager;
-use permissionex\chat\ChatManager;
+use permissionex\managers\ChatManager;
 
 class PexCommand extends Command {
 
 	public function __construct() {
 		parent::__construct("pex", "Pex Command");
+		$this->setPermission("xdarkcraft.command.pex");
 	}
 
 	public function execute(CommandSender $sender, string $label, array $args) : void {
@@ -272,14 +273,15 @@ class PexCommand extends Command {
 		  	 
 			 	 $sender->sendMessage("§7Group ”§2{$args[1]}§7” permissions:");
 			 	 
+
     	 foreach($group->getPermissions() as $permission) {
     	 	foreach($group->getParents() as $parentGroup) {
     	 	 if($parentGroup->hasPermission($permission)) {
     	 	 	$sender->sendMessage(" §7{$permission} ({$parentGroup->getName()})");
-    	 	 	return;
+    	 	 	continue;
     	 	 }
+                $sender->sendMessage(" §7{$permission} (own)");
     	 	}
-    	 	$sender->sendMessage(" §7{$permission} (own)");
     	 }
 			 	break;
 			 	

@@ -15,7 +15,7 @@ class ChatManager {
 		$settings->save();
 	}
 	
-	public static function isChatPerWorld(bool $status = true) : bool {
+	public static function isChatPerWorld() : bool {
 		$settings = Main::getInstance()->getSettings();
 		
 		return (bool) $settings->get("chat-per-world");

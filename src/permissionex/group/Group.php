@@ -7,6 +7,8 @@ namespace permissionex\group;
 use pocketmine\Server;
 use permissionex\Main;
 use permissionex\provider\Provider;
+use permissionex\events\group\GroupUpdateDataEvent;
+use permissionex\managers\NameTagManager;
 
 class Group {
 	
@@ -22,6 +24,45 @@ class Group {
 	
 	public function getName() : string {
 		return $this->name;
+	}
+	
+	public function getDisplayName() : ?string {
+		if(!isset($this->data['displayname']))
+		 return null;
+		
+		return $this->data['displayname'];
+	}
+	
+	public function setDisplayName(?string $displayName = null) : void {
+		$data = $this->data;
+		
+		if($displayName == null)
+		 unset($data['displayname']);
+		else
+	 	$data['displayname'] = $displayName;
+	 
+		$this->setData($data);
+	}
+	
+	public function getNameTag() : ?string {
+		if(!isset($this->data['nametag']))
+		 return null;
+		
+		return $this->data['nametag'];
+	}
+	
+	public function setNameTag(?string $nametag = null) : void {
+		$data = $this->data;
+		
+		if($nametag == null)
+		 unset($data['nametag']);
+		else
+	 	$data['nametag'] = $nametag;
+	 
+		$this->setData($data);
+		
+		foreach($this->getPlayers() as $nick)
+		 NameTagManager::updateNameTag(Server::getInstance()->getPlayerExact($nick));
 	}
 	
 	public function getProvider() : Provider {
@@ -44,6 +85,7 @@ class Group {
 		
 		$this->reload();
 		$this->updatePlayersPermissions();
+		(new GroupUpdateDataEvent($this))->call();
 	}
 	
 	public function getRank() : ?int {
@@ -80,10 +122,11 @@ class Group {
 	
 	public function getPermissions() : array {
 		$perms = $this->data['permissions'];
-		
+
 		foreach($this->data['parents'] as $groupName)
-		 $perms = array_merge($perms, Main::getInstance()->getGroupManager()->getGroup($groupName)->getPermissions());
-		 
+		    foreach(Main::getInstance()->getGroupManager()->getGroup($groupName)->getPermissions() as $perm)
+		        $perms[] = $perm;
+
 		 $permissions = [];
 		 
 		 foreach(array_unique($perms) as $permission) {

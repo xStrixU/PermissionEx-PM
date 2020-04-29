@@ -11,7 +11,7 @@ use permissionex\provider\{
 	Provider, SQLite3Provider
 };
 use permissionex\listeners\{
-	JoinListener, QuitListener, ChatListener
+	JoinListener, QuitListener, ChatListener, LevelChangeListener, UpdateGroupListener
 };
 use permissionex\commands\{
 	PexCommand
@@ -56,6 +56,10 @@ class Main extends PluginBase {
 		return $this->groupManager;
 	}
 	
+	public function getSettings() : Config {
+		return $this->settings;
+	}
+	
 	public function getProvider() : Provider {
 		return $this->provider;
 	}
@@ -98,10 +102,18 @@ class Main extends PluginBase {
 	 $listeners = [
 		 new JoinListener(),
 		 new QuitListener(),
-		 new ChatListener()
+		 new ChatListener(),
+		 new LevelChangeListener(),
+		 new UpdateGroupListener()
 		];
 		
 		foreach($listeners as $listener)
 		 $this->getServer()->getPluginManager()->registerEvents($listener, $this);
+	}
+	
+	public function reload() : void {
+		$this->settings = $settings = new Config($this->getDataFolder(). 'settings.yml', Config::YAML);
+		
+		$this->groupManager->reload();
 	}
 }

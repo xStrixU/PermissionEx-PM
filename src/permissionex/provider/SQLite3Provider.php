@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace permissionex\provider;
 
-use pocketmine\IPlayer;
+use pocketmine\{
+	IPlayer, Player
+};
 use permissionex\Main;
 use permissionex\group\Group;
 
@@ -18,7 +20,7 @@ class SQLite3Provider implements Provider {
 	
 	private function init() : void {
 		$this->db = $db = new \SQLite3(Main::getInstance()->getDataFolder(). 'DataBase.db');
-		$db->exec("CREATE TABLE IF NOT EXISTS groups(nick TEXT, groupName TEXT, expiryDate TEXT)");
+		$db->exec("CREATE TABLE IF NOT EXISTS groups(nick TEXT, groupName TEXT, expiryDate TEXT, levelName TEXT)");
 		$db->exec("CREATE TABLE IF NOT EXISTS permissions(nick TEXT, permission TEXT, expiryDate TEXT)");
 	}
 	
@@ -27,39 +29,66 @@ class SQLite3Provider implements Provider {
 		$nick = strtolower($player->getName());
   $result = $this->db->query("SELECT * FROM groups WHERE nick = '$nick'");
   
-  while($row = $result->fetchArray(SQLITE3_ASSOC))
-   $groups[] = Main::getInstance()->getGroupManager()->getGroup($row['groupName']);
+  while($row = $result->fetchArray(SQLITE3_ASSOC)) {
+  	$group = Main::getInstance()->getGroupManager()->getGroup($row['groupName']);
+  	
+  	if($this->hasPlayerGroup($player, $group))
+  	 $groups[] = $group;
+  }
   
   return $groups;
 	}
 	
-	public function addPlayerGroup(IPlayer $player, Group $group, ?string $expiryDate = null) : void {
+	public function addPlayerGroup(IPlayer $player, Group $group, ?string $expiryDate = null, ?string $levelName = null) : void {
 		$nick = strtolower($player->getName());
-		$this->db->query("INSERT INTO groups (nick, groupName, expiryDate) VALUES ('$nick', '{$group->getName()}', '$expiryDate')");
+		$this->db->query("INSERT INTO groups (nick, groupName, expiryDate, levelName) VALUES ('$nick', '{$group->getName()}', '$expiryDate', '$levelName')");
 	}
 	
-	public function setPlayerGroup(IPlayer $player, Group $group) : void {
+	public function setPlayerGroup(IPlayer $player, Group $group, ?string $levelName = null) : void {
 		$this->removePlayerGroups($player);
-  $this->addPlayerGroup($player, $group);
+  $this->addPlayerGroup($player, $group, null, $levelName);
  }
  
- public function removePlayerGroup(IPlayer $player, Group $group) : void {
+ public function removePlayerGroup(IPlayer $player, Group $group, ?string $levelName = null) : void {
  	$nick = strtolower($player->getName());
+ 	if($levelName != null)
+  	$this->db->query("DELETE FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}' AND levelName = '$levelName'");
+ 	else
   $this->db->query("DELETE FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'");
  }
  
- public function removePlayerGroups(IPlayer $player) : void {
+ public function removePlayerGroups(IPlayer $player, ?string $levelName = null) : void {
  	$nick = strtolower($player->getName());
-  $this->db->query("DELETE FROM groups WHERE nick = '$nick'");
+ 	if($levelName != null)
+ 	 $this->db->query("DELETE FROM groups WHERE nick = '$nick' AND levelName = '$levelName'");
+ 	else
+   $this->db->query("DELETE FROM groups WHERE nick = '$nick'");
  }
  
- public function hasPlayerGroup(IPlayer $player, ?Group $group = null) : bool {
+ public function hasPlayerGroup(IPlayer $player, ?Group $group = null, bool $checkLevel = true) : bool {
  	$nick = strtolower($player->getName());
  	
   if($group == null)
-    return !empty($this->db->query("SELECT * FROM groups WHERE nick = '$nick'")->fetchArray());
+   return !empty($this->db->query("SELECT * FROM groups WHERE nick = '$nick'")->fetchArray());
+  
+  if($player instanceof Player && $checkLevel) {
+  	$array = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray(SQLITE3_ASSOC);
+  	
+  	if(empty($array))
+  	 return false;
+  	
+  	return $array['levelName'] == null ? true : $player->getLevel()->getName() == $array['levelName'];
+  }
+  
+  $array = $this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray(SQLITE3_ASSOC);
+  
+  if(empty($array))
+   return false;
    
-   return !empty($this->db->query("SELECT * FROM groups WHERE nick = '$nick' AND groupName = '{$group->getName()}'")->fetchArray());
+  if($checkLevel)
+  	return $array['levelName'] == null ? true : false;
+  
+  return true;
  }
  
  public function getPlayerGroupExpiryDate(IPlayer $player, Group $group) : ?string {

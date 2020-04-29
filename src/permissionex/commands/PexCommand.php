@@ -12,11 +12,13 @@ use pocketmine\command\{
 };
 use permissionex\Main;
 use permissionex\group\GroupManager;
+use permissionex\managers\ChatManager;
 
 class PexCommand extends Command {
 
 	public function __construct() {
 		parent::__construct("pex", "Pex Command");
+		$this->setPermission("xdarkcraft.command.pex");
 	}
 
 	public function execute(CommandSender $sender, string $label, array $args) : void {
@@ -35,6 +37,9 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§8".str_repeat('-',38)."(§2GENERAL§8)".str_repeat('-',39));
 		 $sender->sendMessage("§7/pex info §8- §7shows plugin informations");
 		 $sender->sendMessage("§7/pex help §8- §7shows a list of commands");
+		 $sender->sendMessage("§7/pex reload §8- §7reloads plugin");
+		 $sender->sendMessage("§7/pex set default group (group) §8- §7sets default group");
+		 $sender->sendMessage("§7/pex set chat pw (true/false) §8- §7sets chat per world status");
 		 $sender->sendMessage("§8".str_repeat('-',41)."(§2USER§8)".str_repeat('-',41));
 		 $sender->sendMessage("§7/pex user §8- §7shows a list of registered users");
 		 $sender->sendMessage("§7/pex user (nick) §8- §7shows a list of player groups");
@@ -45,6 +50,9 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§7/pex user (nick) group set (group) §8- §7sets the player’s group");
 		 $sender->sendMessage("§7/pex user (nick) group add (group) {time[s/m/h/d]} §8- §7adds the player’s group");
 		 $sender->sendMessage("§7/pex user (nick) group remove (group) §8- §7removes the player’s group");
+		 $sender->sendMessage("§7/pex user (nick) world (worldName) group set (group) §8- §7sets the player’s group on specify world");
+		 $sender->sendMessage("§7/pex user (nick) world (worldName) group add (group) {time[s/m/h/d]} §8- §7adds the player’s group on specify world");
+		 $sender->sendMessage("§7/pex user (nick) world (worldName) group remove (group) §8- §7removes the player’s group on specify world");
 		 $sender->sendMessage("§8".str_repeat('-',40)."(§2GROUP§8)".str_repeat('-',40));
 		 $sender->sendMessage("§7/pex group §8- §7shows a list of registered groups");
 		 $sender->sendMessage("§7/pex group (group) list §8- §7shows a list of group’s permissions");
@@ -52,6 +60,8 @@ class PexCommand extends Command {
 		 $sender->sendMessage("§7/pex group (group) format set (format) §8- §7sets group chat format");
 		 $sender->sendMessage("§7/pex group (group) format remove §8- §7removes group chat format");
 		 $sender->sendMessage("§7/pex group (group) rank (rank) §8- §7sets group rank in hierarchy");
+		 $sender->sendMessage("§7/pex group (group) displayname §8- §7group displayname settings");
+		 $sender->sendMessage("§7/pex group (group) nametag §8- §7group nametag settings");
 		 $sender->sendMessage("§7/pex group (group) create {parents} §8- §7creates a group");
 		 $sender->sendMessage("§7/pex group (group) delete §8- §7deletes a group");
 		 $sender->sendMessage("§7/pex group add (permission) §8- §7adds permission to the group");
@@ -78,6 +88,15 @@ class PexCommand extends Command {
 			 $sender->sendMessage("§7Discord: §2xStrixU#4844");
 			break;
 			
+			case "reload":
+			 if(!$sender->hasPermission("pex.command.reload")) {
+			  $sender->sendMessage(Main::getPermissionMessage());
+			 	return;
+		 	}
+		 	Main::getInstance()->reload();
+		 	$sender->sendMessage(Main::format("Plugin has been reloaded"));
+			break;
+			
 			case "set":
 		 	if(!$sender->hasPermission("pex.command.set")) {
 		 		$sender->sendMessage(Main::getPermissionMessage());
@@ -89,6 +108,31 @@ class PexCommand extends Command {
 		 		return;
 		 	}
 			 switch($args[1]) {
+			 	case "chat":
+			 	 if(!isset($args[2])) {
+			 	 	$sender->sendMessage(Main::getErrorMessage());
+			 	 	return;
+			 	 }
+			 	 
+			 	 switch($args[2]) {
+			 	 	case "pw":
+			 	 	 if(!isset($args[3]) || (isset($args[3]) && !in_array($args[3], ["true", "false"]))) {
+			 	 	 	$sender->sendMessage(Main::format("Usage: /pex set chat pw (true/false)"));
+			 	 	 	return;
+			 	 	 }
+			 	 	 
+			 	 	 if($args[3] == "false") {
+			 	 	 	ChatManager::setChatPerWorld(false);
+			 	 	 	$sender->sendMessage(Main::format("Chat per world has been unsetted"));
+			 	 	 } elseif($args[3] == "true") {
+			 	 	 	ChatManager::setChatPerWorld();
+			 	 	 	$sender->sendMessage(Main::format("Chat per world has been setted"));
+			 	 	 }
+			 	 	break;
+			 	 	default:
+			 	 	 $sender->sendMessage(Main::getErrorMessage());
+			 	 }
+			 	break;
 			 	case "default":
 			 	 switch($args[2]) {
 			 	 	case "group":
@@ -148,6 +192,77 @@ class PexCommand extends Command {
 			 }
 			 
 			 switch($args[2]) {
+			 	case "nametag":
+			 	 if(!$groupManager->isGroupExists($args[1])) {
+		  	 	$sender->sendMessage(Main::format("This group does not exists!"));
+			   	return;
+		  	 }
+		  	 
+		  	 $group = $groupManager->getGroup($args[1]);
+		  	 
+		  	 if(!isset($args[3])) {
+		  	 	$nametag = $group->getNametag();
+		  	 	
+		  	 	$sender->sendMessage(Main::format($nametag == null ? "This group has no nametag!" : "Group §2{$args[1]} §7nametag: §2{$nametag}"));
+		  	 	return;
+		  	 }
+		  	 
+		  	 switch($args[3]) {
+		  	 	case "set":
+		  	 	 if(!isset($args[4])) {
+		  	 	 	$sender->sendMessage(Main::format("Usage: /pex group $args[1] nametag set (nametag format)"));
+		  	 	 	return;
+		  	 	 }
+		  	 	 
+		  	 	 $group->setNametag($args[4]);	 
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7nametag has been set to §2{$args[4]}"));
+		  	 	break;
+		  	 	
+		  	 	case "remove":
+		  	 	 $group->setNametag();
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7nametag has been removed"));
+		  	 	break;
+		  	 	
+		  	 	default:
+		  	 	 $sender->sendMessage(Main::getErrorMessage());
+		  	 }
+			 	break;
+			 	
+			 	case "displayname":
+			 	 if(!$groupManager->isGroupExists($args[1])) {
+		  	 	$sender->sendMessage(Main::format("This group does not exists!"));
+			   	return;
+		  	 }
+		  	 
+		  	 $group = $groupManager->getGroup($args[1]);
+		  	 
+		  	 if(!isset($args[3])) {
+		  	 	$displayName = $group->getDisplayName();
+		  	 	
+		  	 	$sender->sendMessage(Main::format($displayName == null ? "This group has no displayname!" : "Group §2{$args[1]} §7displayname: §2{$displayName}"));
+		  	 	return;
+		  	 }
+		  	 
+		  	 switch($args[3]) {
+		  	 	case "set":
+		  	 	 if(!isset($args[4])) {
+		  	 	 	$sender->sendMessage(Main::format("Usage: /pex group $args[1] displayname set (displayname)"));
+		  	 	 	return;
+		  	 	 }
+		  	 	 
+		  	 	 $group->setDisplayName($args[4]);	 
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7displayname has been set to §2{$args[4]}"));
+		  	 	break;
+		  	 	
+		  	 	case "remove":
+		  	 	 $group->setDisplayName();
+		  	   $sender->sendMessage(Main::format("Group §2{$args[1]} §7displayname has been removed"));
+		  	 	break;
+		  	 	
+		  	 	default:
+		  	 	 $sender->sendMessage(Main::getErrorMessage());
+		  	 }
+			 	break;
 			 	case "list":
 			 	 if(!$groupManager->isGroupExists($args[1])) {
 		  	 	$sender->sendMessage(Main::format("This group does not exists!"));
@@ -158,14 +273,15 @@ class PexCommand extends Command {
 		  	 
 			 	 $sender->sendMessage("§7Group ”§2{$args[1]}§7” permissions:");
 			 	 
+
     	 foreach($group->getPermissions() as $permission) {
     	 	foreach($group->getParents() as $parentGroup) {
     	 	 if($parentGroup->hasPermission($permission)) {
     	 	 	$sender->sendMessage(" §7{$permission} ({$parentGroup->getName()})");
-    	 	 	return;
+    	 	 	continue;
     	 	 }
+                $sender->sendMessage(" §7{$permission} (own)");
     	 	}
-    	 	$sender->sendMessage(" §7{$permission} (own)");
     	 }
 			 	break;
 			 	
@@ -412,6 +528,128 @@ class PexCommand extends Command {
     }
     
     switch($args[2]) {
+    	case "world":
+    	 if(!isset($args[4])) {
+    	 	$sender->sendMessage(Main::getErrorMessage());
+    	 	return;
+    	 }
+    	 
+    	 $levelName = $args[3];
+    	 
+    	 switch($args[4]) {
+    	 	case "add":
+    	   if(!isset($args[5])) {
+    	   	$sender->sendMessage(Main::format("Usage: /pex user $args[1] world $args[5] add (permission) {time[s/m/h/d]}"));
+    	   	return;
+    	   }
+    	   $time = null;
+        
+        if(isset($args[6])) {
+  	      if(strpos($args[6], "d"))
+		        $time = intval(explode("d", $args[6])[0]) * 86400;
+            
+         if(strpos($args[6], "h"))
+	 	       $time = intval(explode("h", $args[6])[0]) * 3600;
+
+	   	    if(strpos($args[6], "m"))
+		        $time = intval(explode("h", $args[6])[0]) * 60;
+
+	 	      if(strpos($args[6], "s"))
+	 	       $time = intval(explode("s", $args[6])[0]);
+	 	      $playerManager = $groupManager->getPlayer($args[1])->addPermission($args[5], $time);
+        } else
+         $playerManager = $groupManager->getPlayer($args[1])->addPermission($args[5]);
+    	 
+    	   $sender->sendMessage(Main::format("Permission ”§2{$args[5]}§7” added to world §2{$levelName}§7".($time == null ? "" : " for §2{$args[6]}")));
+    	  break;
+    	
+      	case "group":
+        if(!isset($args[6])) {
+         $sender->sendMessage(Main::getErrorMessage());
+         return;
+        }
+      
+        if(!$groupManager->isGroupExists($args[6])) {
+         $sender->sendMessage(Main::format("This group does not exists!"));
+         return;
+        }
+      
+        switch($args[5]) {
+        	case "add":  
+          $playerManager = $groupManager->getPlayer($args[1]);
+        
+          $player = $playerManager->getPlayer();
+          $nick = $player instanceof Player ? $player->getName() : $args[1];
+        
+          $time = null;
+        
+          if(isset($args[7])) {
+  	        if(strpos($args[7], "d"))
+		          $time = intval(explode("d", $args[7])[0]) * 86400;
+          
+          	if(strpos($args[7], "h"))
+	 	         $time = intval(explode("h", $args[7])[0]) * 3600;
+
+	         	if(strpos($args[7], "m"))
+		          $time = intval(explode("h", $args[7])[0]) * 60;
+
+	 	        if(strpos($args[7], "s"))
+	 	         $time = intval(explode("s", $args[7])[0]);
+	 	        $playerManager->addGroup($groupManager->getGroup($args[6]), $time, $levelName);
+          } else
+           $playerManager->addGroup($groupManager->getGroup($args[6]), null, $levelName);
+        
+          $sender->sendMessage(Main::format("User §2{$nick} §7added to group on world §2{$levelName} §7”§2{$args[6]}§7”".($time == null ? "" : " for §2{$args[7]}")));
+         break;
+   
+         case "set":
+          $playerManager = $groupManager->getPlayer($args[1]);
+    
+          $player = $playerManager->getPlayer();
+          $nick = $player instanceof Player ? $player->getName() : $args[1];
+    
+          $time = null;
+        
+          if(isset($args[7])) {
+  	        if(strpos($args[7], "d"))
+		          $time = intval(explode("d", $args[7])[0]) * 86400;
+          
+           if(strpos($args[7], "h"))
+	 	         $time = intval(explode("h", $args[7])[0]) * 3600;
+
+	         	if(strpos($args[7], "m"))
+		          $time = intval(explode("h", $args[7])[0]) * 60;
+
+	 	        if(strpos($args[7], "s"))
+	 	         $time = intval(explode("s", $args[7])[0]);
+	 	        $playerManager->setGroup($groupManager->getGroup($args[6]), $time, $levelName);
+          } else
+           $playerManager->setGroup($groupManager->getGroup($args[6]), null, $levelName);
+        
+          $sender->sendMessage(Main::format("{$nick}’s group set to ”§2{$args[4]}§7” on world §2{$levelName}§7".($time == null ? "" : " for §2{$args[5]}")));
+           
+           break;
+           
+           case "remove":      
+            $playerManager = $groupManager->getPlayer($args[1]);
+            
+            $player = $playerManager->getPlayer();
+            $nick = $player instanceof Player ? $player->getName() : $args[1];
+            
+            $playerManager->removeGroup($groupManager->getGroup($args[6]), true, $levelName);
+        
+            $sender->sendMessage(Main::format("User §2{$nick} §7removed from group ”§2{$args[4]}§7” on world §2{$levelName}"));
+           break;
+           default:
+			 	       $sender->sendMessage(Main::getErrorMessage());
+          }
+         break;
+   
+         default:
+			       $sender->sendMessage(Main::getErrorMessage());
+      }
+    	break;
+    	
     	case "list":
     	 $sender->sendMessage("§7{$args[1]}‘s permissions:");
     	 foreach($groupManager->getPlayer($args[1])->getPermissions() as $permission)
@@ -540,6 +778,7 @@ class PexCommand extends Command {
 			 	 $sender->sendMessage(Main::getErrorMessage());
     }
    break;
+   
    default:
 			 $sender->sendMessage(Main::getErrorMessage());
   }

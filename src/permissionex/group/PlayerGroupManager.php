@@ -10,6 +10,7 @@ use pocketmine\{
 use pocketmine\permission\PermissionAttachment;
 use permissionex\Main;
 use permissionex\provider\Provider;
+use permissionex\events\player\PlayerUpdateGroupEvent;
 
 class PlayerGroupManager {
 	
@@ -39,16 +40,19 @@ class PlayerGroupManager {
  	return $this->provider->getPlayerGroups($this->player);
 	}
 	
-	public function addGroup(Group $group, ?int $time = null) : void {
-		if($this->hasGroup($group))
+	public function addGroup(Group $group, ?int $time = null, ?string $levelName = null) : void {
+		if($this->hasGroup($group, false))
 		 $this->removeGroup($group, false);
 		if($time != null) {
 			$date = date('d.m.Y H:i:s', strtotime(date("H:i:s")) + $time);
- 	$this->provider->addPlayerGroup($this->player, $group, $date);
+ 	$this->provider->addPlayerGroup($this->player, $group, $date, $levelName);
 		} else
-			$this->provider->addPlayerGroup($this->player, $group);
+			$this->provider->addPlayerGroup($this->player, $group, null, $levelName);
 		
 		$this->updatePermissions();
+		
+		if($this->player instanceof Player)
+		 (new PlayerUpdateGroupEvent($this->player))->call();
 	}
 	
 	public function addDefaultGroup() : void {
@@ -56,13 +60,13 @@ class PlayerGroupManager {
   $this->addGroup($defaultGroup);
  }
 	
-	public function setGroup(Group $group, ?int $time = null) : void {
-		$this->removeGroups();
-  $this->addGroup($group, $time);
+	public function setGroup(Group $group, ?int $time = null, ?string $levelName = null) : void {
+		$this->removeGroups($levelName);
+  $this->addGroup($group, $time, $levelName);
  }
  
- public function removeGroup(Group $group, bool $addDefault = true) : void {
- 	$this->provider->removePlayerGroup($this->player, $group);
+ public function removeGroup(Group $group, bool $addDefault = true, ?string $levelName = null) : void {
+ 	$this->provider->removePlayerGroup($this->player, $group, $levelName);
  	
  	if($addDefault && $this->getGroup() == null)
  	 $this->addDefaultGroup();
@@ -70,13 +74,13 @@ class PlayerGroupManager {
  	$this->updatePermissions();
  }
  
- public function removeGroups() : void {
- 	$this->provider->removePlayerGroups($this->player);
+ public function removeGroups(?string $levelName = null) : void {
+ 	$this->provider->removePlayerGroups($this->player, $levelName);
  	$this->updatePermissions();
  }
  
- public function hasGroup(?Group $group = null) : bool {
-		return $this->provider->hasPlayerGroup($this->player, $group);
+ public function hasGroup(?Group $group = null, bool $checkLevel = true) : bool {
+		return $this->provider->hasPlayerGroup($this->player, $group, $checkLevel);
  }
  
  // RETURN FIRST GROUP IN HIERARCHY
@@ -88,6 +92,9 @@ class PlayerGroupManager {
  			$rank = $group->getRank() == null ? 0 : $group->getRank();
  		 $groups[$rank][] = $group;
  		}
+ 	
+ 	if(empty($groups))
+ 	 return null;
  		
  	return $groups[max(array_keys($groups))][0];
  }
@@ -105,34 +112,63 @@ class PlayerGroupManager {
  	$permissions = [];
  	
  	foreach($this->getGroups() as $group) {
-   foreach($group->getPermissions() as $permission) {
-   	if($permission == '*') {
-   		if(!in_array($permission, $permissions))
-   		  $permissions[] = $permission;
+   foreach($group->getPermissions() as $permissionName) {
+   	$permission = Server::getInstance()->getPluginManager()->getPermission($permissionName);
+   	
+   	if($permissionName == '*') {
+   		if(!in_array($permissionName, $permissions))
+   		  $permissions[] = $permissionName;
    		
    		foreach(Server::getInstance()->getPluginManager()->getPermissions() as $perm)
    		 if(!in_array($perm->getName(), $permissions))
        $permissions[] = $perm->getName();
        
       // PERMISSION.*
-   	} elseif(substr($permission, -1) == '*') {
-   		 if(!in_array($permission, $permissions))
-   		  $permissions[] = $permission;
+   	} elseif(substr($permissionName, -1) == '*') {
+   		 if(!in_array($permissionName, $permissions))
+   		  $permissions[] = $permissionName;
    		foreach(Server::getInstance()->getPluginManager()->getPermissions() as $perm)
-   		 if(substr($perm->getName(), 0, strlen($permission)-1) == substr($permission, 0, strlen($permission)-1))
+   		 if(substr($perm->getName(), 0, strlen($permissionName)-1) == substr($permissionName, 0, strlen($permissionName)-1))
    		  $permissions[] = $perm->getName();
-   	} elseif(!in_array($permission, $permissions))
-     $permissions[] = $permission;
+   	} else {
+   		if(!in_array($permissionName, $permissions))
+   		 $permissions[] = $permissionName;
+   		
+   		if($permission == null)
+   		 continue;
+   		 
+   		foreach($permission->getChildren() as $childPerm => $value)
+   		 if(!in_array($childPerm, $permissions))
+   		  $permissions[] = $childPerm;
+   	}
    }
   }
   
-  foreach($this->provider->getPlayerPermissions($this->player) as $permission) {
-  	if($permission == '*') {
+  foreach($this->provider->getPlayerPermissions($this->player) as $permissionName) {
+  	$permission = Server::getInstance()->getPluginManager()->getPermission($permissionName);
+  	if($permissionName == '*') {
    	foreach(Server::getInstance()->getPluginManager()->getPermissions() as $perm)
    	 if(!in_array($perm->getName(), $permissions))
       $permissions[] = $perm->getName();
-   	} elseif(!in_array($permission, $permissions))
-    $permissions[] = $permission;
+      
+      // PERMISSSION.*
+   	} elseif(substr($permissionName, -1) == '*') {
+   		 if(!in_array($permissionName, $permissions))
+   		  $permissions[] = $permissionName;
+   		foreach(Server::getInstance()->getPluginManager()->getPermissions() as $perm)
+   		 if(substr($perm->getName(), 0, strlen($permissionName)-1) == substr($permissionName, 0, strlen($permissionName)-1))
+   		  $permissions[] = $perm->getName();
+   	} else {
+   		if(!in_array($permissionName, $permissions))
+   		 $permissions[] = $permissionName;
+   		
+   		if($permission == null)
+   		 continue;
+   		
+   		foreach($permission->getChildren() as $childPerm => $value)
+   		 if(!in_array($childPerm, $permissions))
+   		  $permissions[] = $childPerm;
+  	}
   }
   
   return $permissions;
